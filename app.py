@@ -1,195 +1,110 @@
 import os
 
-print("--- Welcome to Contact Manager ---")
+def load_contacts():
+    contacts = {}
+    if os.path.exists('contact.db'):
+        with open('contact.db', 'r') as file:
+            for line in file:
+                name, number = line.strip().split(":")
+                contacts[name] = number
+    return contacts
 
-if os.path.exists('contact.db'):
-    with open('contact.db', 'r') as file:
-        contact = file.read()
-        num = contact.count("\n")
-        print("Number of Contacts: " + str(num))
-        file.close()
+def save_contacts(contacts):
+    with open('contact.db', 'w') as file:
+        for name, number in contacts.items():
+            file.write(f"{name}:{number}\n")
 
-
-def updateContact(nam):
-    with open('contact.db', 'r') as file:
-        contacts = file.readlines()
-        dict = {}
-        result = ""
-        flag = 0
-        for item in contacts:
-            key, value = item.strip().split(":")
-            dict[key] = value  # Created Dict of Contacts
-        for name in dict.keys():
-            if nam in name:
-                flag = 1
-        file.close()
-
-    if (flag == 1):
-        for name, num in dict.items():
-            if nam == name:
-                print("Name: " + name + "\nContact: " + num)
-                print("What do you want to edit? (Name[N] or Contact Number[C])")
-                ans = input(">").capitalize()
-                if (ans == "N"):
-                    name_ = input("Name to be updated: ")
-                    tmp = dict[nam]
-                    dict.pop(nam)
-                    dict[name_] = tmp
-                if ans == "C":
-                    contact_ = input("Number to be updated: ")
-                    dict[nam] = contact_
-                for key, value in dict.items():
-                    result += f"{key}:{value}\n"
-                with open('contact.db', 'w') as file:
-                    file.write(result)
-                    file.close()
-                return "Updated Successfully!"
+def update_contact(contacts, name):
+    if name in contacts:
+        print("Name:", name)
+        print("Contact:", contacts[name])
+        print("What do you want to edit? (Name[N] or Contact Number[C])")
+        ans = input(">").capitalize()
+        if ans == "N":
+            new_name = input("New name: ")
+            contacts[new_name] = contacts.pop(name)
+        elif ans == "C":
+            new_number = input("New number: ")
+            contacts[name] = new_number
+        save_contacts(contacts)
+        return "Updated Successfully!"
     else:
         return "Contact not found!"
 
+def view_all(contacts):
+    print("Contact list:")
+    for name, number in contacts.items():
+        print("-" * 30)
+        print(f"Name: {name}\nContact: {number}")
+    print("-" * 30)
 
-def viewAll():
-    with open('contact.db', 'r') as file:
-        contacts = file.readlines()
-        print("Contact list: ")
-        for contact in contacts:
-            print("_______________________________".replace("_", "-"))
-            row = contact.strip().split(":")
-            print("Name: {0} \nContact: {1}".format(row[0], row[1]), end="\n")
-        print("_______________________________".replace("_", "-"))
-    print("\n\n")
-
-
-def searchContact(name):
-    with open('contact.db', 'r') as file:
-        contacts = file.readlines()
-        counter = 0
-        rcontact = ""
-        # print(contacts)
-        for contact in contacts:
-            if name.upper() in contact.upper():
-                counter += 1
-                rcontact += "_______________________________\n".replace("_", "-")
-                rcontact += "Name: " + contact.replace(":", "\nContact: ")
-        file.close()
-        if rcontact == "":
-            return "Contact not Found!"
-        else:
-            return "----- " + str(counter) + " Contact found! -----\n" + rcontact + "_______________________________".replace("_", "-")
-
-
-def addContact(name, number):
-    if not os.path.exists('contact.db'):
-        with open("contact.db", 'w+') as file:
-            file.write(name + ":" + number + "\n")
+def search_contact(contacts, name):
+    matching_contacts = []
+    for contact_name, number in contacts.items():
+        if name.lower() in contact_name.lower():
+            matching_contacts.append((contact_name, number))
+    if matching_contacts:
+        result = []
+        for contact_name, number in matching_contacts:
+            result.append(f"Name: {contact_name}\nContact: {number}")
+        return f"----- {len(matching_contacts)} Contact found! -----\n" + "\n".join(result)
     else:
-        flag = 0
-        with open('contact.db', 'r') as file:
-            contacts = file.readlines()
-            for contact in contacts:
-                if (name == contact.split(":")[0]):
-                    print("Name already exists!")
-                    flag = 1
-        if (flag == 0):
-            with open("contact.db", 'a') as file:
-                file.write(name + ":" + number + "\n")
+        return "Contact not Found!"
 
-                file.close()
-            print("Contact Inserted Successfully!")
+def add_contact(contacts, name, number):
+    if name not in contacts:
+        contacts[name] = number
+        save_contacts(contacts)
+        return "Contact Inserted Successfully!"
+    else:
+        return "Name already exists!"
 
+def del_contact(contacts, name):
+    if name in contacts:
+        del contacts[name]
+        save_contacts(contacts)
+        return "Contact deleted!"
+    else:
+        return "Contact not found!"
 
+def main():
+    contacts = load_contacts()
 
-def delContact(name):
-    with open('contact.db', 'r') as file:
-        contacts = file.readlines()
-        counter = 0
-        cdel=0
-        dict = set({})
-        to_del = []
-        rcontact = ""
-        for contact in contacts:
-           dict.add(contact)
+    while True:
+        print("Choose from the given options:")
+        print("(A) Add Contact")
+        print("(S) Search Contact")
+        print("(U) Update Contact")
+        print("(D) Delete Contact")
+        print("(V) View all Contacts")
+        print("(Q) Quit")
+        menu = input(">")
 
-        for contact in contacts:
-            if name.upper() in contact.upper():
-                to_del.append(contact)
-                cdel += 1
-                rcontact += "_______________________________\n".replace("_", "-")
-                rcontact += "[" + str(cdel) + "] Name: " + contact.replace(":", "\nContact: ")
-                file.close()
+        if menu == "A" or menu == "a":
+            name = input("Name: ")
+            number = input("Contact No.: ")
+            print(add_contact(contacts, name, number))
 
-    with open('contact.db', 'w') as file:
-        if len(to_del) > 1:
-                print("----- " + str(cdel) + " Contact found! -----\n" + rcontact + "_______________________________".replace("_", "-"))
-                print("Select the contact to delete & enter(Q) to quit!): ")
-                ansn = int(input(">"))
-                ansn -=1
+        elif menu == "S" or menu == "s":
+            name = input("Enter the name to search in contacts: ")
+            result = search_contact(contacts, name)
+            print(result)
 
-                if str(ansn).upper() == 'Q':
-                    return "Aborted!"
-                else:
-                    print("Are you sure, to delete the contact? (Y/N)")
-                    ans = input(">")
-                    if ans.upper() == "Y" or ans.upper() == "yes" or ans.upper() == "YES" or ans.upper() == "Yes":
-                        dict.remove(to_del[ansn])
-                        for contact in dict:
-                            file.write(contact)
-                        file.close()
-                        return "Contact deleted!\n"
-                    else:
-                        return "Aborted!\n"
+        elif menu == "U" or menu == "u":
+            name = input("Enter the contact name to edit: ")
+            print(update_contact(contacts, name))
 
-        if len(to_del) == 0:
-            print("----- " + str(cdel) + " Contact found! -----\n" + rcontact + "_______________________________".replace("_", "-"))
-            return "Contact not found!"
+        elif menu == "V" or menu == "v":
+            view_all(contacts)
 
-        else:
-            print("----- " + str(cdel) + " Contact found! -----\n" + rcontact + "_______________________________".replace("_", "-"))
-            print("Are you sure, to delete the contact? (Y/N)")
-            ans = input(">")
-            ansn = 0
-            if ans.upper() == "Y" or ans.upper() == "yes" or ans.upper() == "YES" or ans.upper() == "Yes":
-                dict.remove(to_del[ansn])
-                for contact in dict:
-                    file.write(contact)
-                file.close()
+        elif menu == "D" or menu == "d":
+            name = input("Enter the contact name to delete: ")
+            print(del_contact(contacts, name))
 
-                return "Contact deleted!\n"
-            else:
-                return "Aborted!\n"
+        elif menu == "Q" or menu == "q":
+            print("Bye!")
+            break
 
-
-while (True):
-    print("Choose from the given options:\n"
-          "(A) Add Contact\n"
-          "(S) Search Contact\n"
-          "(U) Update Contact\n"
-          "(D) Delete Contact\n"
-          "(V) View all Contacts\n"
-          "(Q) Quit")
-    menu = input(">")
-
-    if menu == "A" or menu == "a":
-        name = str(input("Name: "))
-        number = str(input("Contact No.: "))
-        addContact(name, number)
-
-    if menu == "S" or menu == "s":
-        name = input("Enter the name to search in contact: ")
-        result = searchContact(name)
-        print(result)
-
-    if menu == "U" or menu == "u":
-        name = input("Enter the contact name to edit: ")
-        print(updateContact(name))
-
-    if menu == "V" or menu == "v":
-        viewAll()
-
-    if menu == "D" or menu == "d":
-        name = input("Enter the contact name to delete: ")
-        print(delContact(name))
-
-    if menu == "Q" or menu == "q":
-        print("Bye!")
-        quit()
+if __name__ == "__main__":
+    print("--- Welcome to Contact Manager ---")
+    main()
