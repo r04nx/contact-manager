@@ -1,7 +1,3 @@
-Certainly! Here's the updated Markdown description for your Python project based on the improved code:
-
----
-
 # Contact Manager Python Project
 
 The **Contact Manager** is a Python program designed to help you manage and manipulate contact information. It provides a command-line interface to perform various tasks related to contacts, such as adding, searching, updating, and deleting contacts.
